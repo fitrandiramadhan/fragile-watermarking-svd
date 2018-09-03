@@ -23,8 +23,8 @@ class Watermark:
         # pad image so that we can divide into N x N blocks evenly
         ypad = self.blocksize - (self.img.shape[0] % self.blocksize)
         xpad = self.blocksize - (self.img.shape[1] % self.blocksize)
-        img = np.pad(self.img, pad_width=((0, ypad), (0, xpad), (0, 0)),
-                     mode='constant', constant_values=0)
+        self.img = np.pad(self.img, pad_width=((0, ypad), (0, xpad), (0, 0)),
+                          mode='constant', constant_values=0)
         # numpy magic trick to segment image into N x N blocks
         block_shape = (self.img.shape[0] // self.blocksize,
                        self.img.shape[1] // self.blocksize,
@@ -68,7 +68,7 @@ if __name__ == '__main__':
     parser.add_argument('-b', '--blocksize', help="Number of dimensions of \
                         block", default=4)
     parser.add_argument('-t', '--threshold', help="Binarization threshold",
-                        default=0.24)
+                        default=0.25)
     args = parser.parse_args()
 
     wm = Watermark(args.blocksize, args.threshold)
