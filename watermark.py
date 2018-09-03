@@ -71,5 +71,5 @@ if __name__ == '__main__':
                         default=0.25)
     args = parser.parse_args()
 
-    wm = Watermark(args.blocksize, args.threshold)
+    wm = Watermark(int(args.blocksize), float(args.threshold))
     wm.encrypt(args.input, None)
