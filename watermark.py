@@ -115,7 +115,12 @@ class Watermark:
 
 if __name__ == '__main__':
     parser = ArgumentParser(description="Implements fragile watermarking")
-    parser.add_argument('-i', '--input', help="Path to image")
+    parser.add_argument('-i', '--input', help="Path to original image")
+    parser.add_argument('-o', '--output', help="Path to watermarked image")
+    parser.add_argument(
+        '-d', '--decrypt',
+        action='store_true',
+        help="Whether to decrypt or encrypt image. Defaults to encryption")
     parser.add_argument(
         '-b', '--blocksize', help="Number of dimensions of block", default=4)
     parser.add_argument(
@@ -125,4 +130,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     wm = Watermark(int(args.blocksize), float(args.threshold), args.show)
-    wm.encrypt(args.input, None)
+    if args.decrypt:
+        wm.decrypt(args.input, args.output)
+    else:
+        wm.encrypt(args.input, args.output)
