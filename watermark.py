@@ -62,15 +62,14 @@ class Watermark:
 
     def embed(self, padded_image, binary):
         # Replace LSB with binarized image:
-        # a & ~1 replaces LSB with 0
         # (a & ~1) | b replaces LSB with b regardless of value of b
-        padded_image[:] = np.bitwise_and(padded_image, ~1)
         return np.bitwise_or(padded_image, binary)
 
     def encrypt(self, src, dest=None):
-        # Read image
-        img = self.read_image(src)
-        # Create padded image
+        # Read image and replace LSB with 0
+        # a & ~1 replace LSB with 0
+        img = np.bitwise_and(plt.imread(src), ~1).astype(np.uint8)
+        # Pad image
         pad = self.pad_image(img)
         # Compute binarized image
         binary = self.binarize(self.segment_block_3d(pad))
@@ -86,9 +85,9 @@ class Watermark:
         else:
             plt.imsave(dest, watermark[:x, :y])
 
-    def decrypt(self, src, ref):
+    def decrypt(self, src, dest=None):
         """
-        Inspect whether image has been tampered.
+        Inspect whether image has been tampered with.
 
         Parameters
         ----------
@@ -96,21 +95,23 @@ class Watermark:
         ref : image file path to file to inspect
         """
         # Read image
-        src_img = self.read_image(src)
-        ref_img = self.read_image(ref)
-        # Create padded image
-        src_pad = self.pad_image(src_img)
-        ref_pad = self.pad_image(ref_img)
+        img = plt.imread(src)
+        # Extract LSB: a & 1
+        lsb = np.bitwise_and(img, 1).astype(bool)
+        # a & ~1 replace LSB with 0
+        img = np.bitwise_and(img, ~1).astype(np.uint8)
+        # Pad image
+        pad = self.pad_image(img)
         # Compute binarized image
-        src_binary = self.binarize(self.segment_block_3d(src_pad))
-        ref_binary = self.binarize(self.segment_block_3d(ref_pad))
+        x, y = img.shape[:2]
+        binary = self.binarize(self.segment_block_3d(pad))[:x, :y]
 
-        xor = np.bitwise_xor(src_binary, ref_binary)
+        xor = np.bitwise_xor(binary, lsb)
         if self.show:
             plt.imshow(np.any(xor, axis=-1))
             plt.show()
-        else:
-            return xor
+        elif dest:
+            plt.imsave(dest, xor)
 
 
 if __name__ == '__main__':
@@ -118,7 +119,8 @@ if __name__ == '__main__':
     parser.add_argument('-i', '--input', help="Path to original image")
     parser.add_argument('-o', '--output', help="Path to watermarked image")
     parser.add_argument(
-        '-d', '--decrypt',
+        '-d',
+        '--decrypt',
         action='store_true',
         help="Whether to decrypt or encrypt image. Defaults to encryption")
     parser.add_argument(
