@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 import numpy as np
+import imageio as iio
 import matplotlib
+from argparse import ArgumentParser
 matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
-from argparse import ArgumentParser
 
 
 class Watermark:
@@ -14,7 +15,7 @@ class Watermark:
 
     def read_image(self, image_path):
         # read image as ndarray
-        return plt.imread(image_path)
+        return iio.imread(image_path)
 
     def pad_image(self, image):
         # pad image so that we can divide into N x N blocks evenly
@@ -67,8 +68,12 @@ class Watermark:
 
     def encrypt(self, src, dest=None):
         # Read image and replace LSB with 0
+        if type(src) == str:
+            img = iio.imread(src)
+        else:
+            img = src
         # a & ~1 replace LSB with 0
-        img = np.bitwise_and(plt.imread(src), ~1).astype(np.uint8)
+        img[:] = np.bitwise_and(img, ~1)
         # Pad image
         pad = self.pad_image(img)
         # Compute binarized image
@@ -80,10 +85,11 @@ class Watermark:
         watermark = self.embed(pad, binary)
         # Return to original dimensions
         x, y = img.shape[:2]
+        img[:] = watermark[:x, :y]
         if not dest:
-            return watermark[:x, :y]
+            return img
         else:
-            plt.imsave(dest, watermark[:x, :y])
+            iio.imwrite(dest, img)
 
     def decrypt(self, src, dest=None):
         """
@@ -95,11 +101,14 @@ class Watermark:
         ref : image file path to file to inspect
         """
         # Read image
-        img = plt.imread(src)
+        if type(src) == str:
+            img = iio.imread(src)
+        else:
+            img = src
         # Extract LSB: a & 1
-        lsb = np.bitwise_and(img, 1).astype(bool)
+        lsb = np.bitwise_and(img, 1)
         # a & ~1 replace LSB with 0
-        img = np.bitwise_and(img, ~1).astype(np.uint8)
+        img[:] = np.bitwise_and(img, ~1)
         # Pad image
         pad = self.pad_image(img)
         # Compute binarized image
@@ -111,7 +120,17 @@ class Watermark:
             plt.imshow(np.any(xor, axis=-1))
             plt.show()
         elif dest:
-            plt.imsave(dest, xor)
+            iio.imwrite(dest, xor)
+        else:
+            return xor
+
+    def gif_encrypt(self, src, dest):
+        imgs = [self.encrypt(n) for n in iio.mimread(src)]
+        iio.mimwrite(dest, imgs)
+
+    def gif_decrypt(self, src, dest):
+        imgs = [self.decrypt(n) for n in iio.mimread(src)]
+        iio.mimwrite(dest, imgs)
 
 
 if __name__ == '__main__':
@@ -128,11 +147,11 @@ if __name__ == '__main__':
     parser.add_argument(
         '-t', '--threshold', help="Binarization threshold", default=0.25)
     parser.add_argument(
-        '--show', action='store_false', help="Show binary image")
+        '--show', action='store_true', help="Show binary image")
     args = parser.parse_args()
 
     wm = Watermark(int(args.blocksize), float(args.threshold), args.show)
     if args.decrypt:
         wm.decrypt(args.input, args.output)
     else:
-        wm.encrypt(args.input, args.output)
+        wm.gif_encrypt(args.input, args.output)

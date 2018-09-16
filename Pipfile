@@ -11,6 +11,7 @@ ipython = "*"
 sip = "*"
 pillow = "*"
 ffmpeg-python = "*"
+imageio = "*"
 
 [dev-packages]
 

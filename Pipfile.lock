@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "64e8746d1a1676fa44d9f201e5757c821a3cf5a3a4c4d201f04d2855b87da353"
+            "sha256": "160e2e4eab18c7d166f29dda42dcd3bf0cf12018da069f51387bdf1c62b6317c"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -49,6 +49,13 @@
                 "sha256:e39ced1ab767b5936646cedba8bcce582398233d6a627067d4c6a454c90cfedb"
             ],
             "version": "==0.16.0"
+        },
+        "imageio": {
+            "hashes": [
+                "sha256:16b8077bc8a5fa7a58b3e744f7ecbb156d8c088132df31e0f4f546c98de3514a"
+            ],
+            "index": "pypi",
+            "version": "==2.4.1"
         },
         "ipython": {
             "hashes": [
