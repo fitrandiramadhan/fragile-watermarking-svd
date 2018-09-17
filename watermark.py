@@ -61,6 +61,9 @@ class Watermark:
         ])
         return binary
 
+    def arnold(self, img, binary, key1, key2):
+        assert img.shape[0] == img.shape[1]
+
     def embed(self, padded_image, binary):
         # Replace LSB with binarized image:
         # (a & ~1) | b replaces LSB with b regardless of value of b
@@ -78,18 +81,18 @@ class Watermark:
         pad = self.pad_image(img)
         # Compute binarized image
         binary = self.binarize(self.segment_block_3d(pad))
-        if self.show:
-            plt.imshow(np.all(binary, axis=-1))
-            plt.show()
         # Embed watermark
         watermark = self.embed(pad, binary)
         # Return to original dimensions
         x, y = img.shape[:2]
         img[:] = watermark[:x, :y]
-        if not dest:
-            return img
-        else:
+        if self.show:
+            plt.imshow(np.all(binary, axis=-1))
+            plt.show()
+        elif dest:
             iio.imwrite(dest, img)
+        else:
+            return img
 
     def decrypt(self, src, dest=None):
         """
@@ -152,6 +155,6 @@ if __name__ == '__main__':
 
     wm = Watermark(int(args.blocksize), float(args.threshold), args.show)
     if args.decrypt:
-        wm.decrypt(args.input, args.output)
+        wm.gif_decrypt(args.input, args.output)
     else:
         wm.gif_encrypt(args.input, args.output)
