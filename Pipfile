@@ -12,6 +12,7 @@ sip = "*"
 pillow = "*"
 ffmpeg-python = "*"
 imageio = "*"
+scikit-video = "*"
 
 [dev-packages]
 
