@@ -13,6 +13,7 @@ pillow = "*"
 ffmpeg-python = "*"
 imageio = "*"
 scikit-video = "*"
+scikit-learn = "*"
 
 [dev-packages]
 

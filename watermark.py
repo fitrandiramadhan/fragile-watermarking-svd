@@ -214,7 +214,7 @@ class Watermark:
         with skv.FFmpegWriter(dest, outputdict={'-c:v': 'ffv1'}) as f:
             [f.writeFrame(xor[n] * 192) for n in range(len(vid))]
 
-    def tamper_vid(self, src, dest, n_tamper=20):
+    def tamper_vid(self, src, dest, n_tamper=20, save=False):
         vid = skv.vread(src)
         t, x, y, _ = vid.shape
         rand_t = np.random.randint(t, size=n_tamper)
@@ -226,6 +226,15 @@ class Watermark:
                 rand_y[n], :] = rand_z[n]
         with skv.FFmpegWriter(dest, outputdict={'-c:v': 'ffv1'}) as f:
             [f.writeFrame(vid[n]) for n in range(len(vid))]
+        if save:
+            tmp = np.zeros(vid.shape, dtype=vid.dtype)
+            for n in range(n_tamper):
+                tmp[rand_t[n], rand_x[n]:rand_y[n], rand_x[n]:
+                    rand_y[n], :] = rand_z[n]
+            with skv.FFmpegWriter(
+                    dest.replace('.avi', '_tmp.avi'),
+                    outputdict={'-c:v': 'ffv1'}) as f:
+                [f.writeFrame(tmp[n]) for n in range(len(tmp))]
 
     def binarize_4d(self, vid):
         assert len(vid.shape) == 4
@@ -273,6 +282,15 @@ class Watermark:
         if n > 0:
             vid[:, tmp_x, tmp_y] = vid[:, x, y]
 
+    def score_vid(self, ref_path, hyp_path):
+        from sklearn.metrics import f1_score
+        ref = skv.vread(ref_path)
+        hyp = skv.vread(hyp_path)
+        score = f1_score(
+            np.any(ref, axis=-1).flatten(),
+            np.any(hyp, axis=-1).flatten())
+        print(score)
+
 
 if __name__ == '__main__':
     parser = ArgumentParser(description="Implements fragile watermarking")
@@ -289,9 +307,10 @@ if __name__ == '__main__':
     parser.add_argument(
         '-t', '--threshold', help="Binarization threshold", default=0.25)
     parser.add_argument(
-        '-m', '--mode', help="Mode to operate in: encrypt, decrypt, tamper",
-        default='encrypt'
-    )
+        '-m',
+        '--mode',
+        help="Mode to operate in: encrypt, decrypt, tamper",
+        default='encrypt')
     parser.add_argument(
         '--show', action='store_true', help="Show binary image")
     parser.add_argument(
@@ -310,4 +329,6 @@ if __name__ == '__main__':
     elif args.mode == 'decrypt':
         wm.decrypt_vid(args.input, args.output)
     elif args.mode == 'tamper':
-        wm.tamper_vid(args.input, args.output)
+        wm.tamper_vid(args.input, args.output, save=True)
+    elif args.mode == 'score':
+        wm.score_vid(args.input, args.output)
