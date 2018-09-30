@@ -153,9 +153,9 @@ class Watermark:
         # Localize alterations (if any)
         xor = np.bitwise_xor(binary, lsb)
         if self.show:
-            plt.imshow(np.any(xor, axis=-1))
+            plt.imshow(np.all(xor, axis=-1))
             plt.show()
-        return xor
+        return xor * 192
 
     def gif_encrypt(self, src, dest=None):
         ext = os.path.splitext(src)[-1]
