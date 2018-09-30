@@ -185,6 +185,14 @@ class Watermark:
             if not self.show:
                 iio.imwrite(dest, img)
 
+    def encrypt_img(self, src, dest):
+        img = self.encrypt(src)
+        iio.imwrite(dest, img)
+
+    def decrypt_img(self, src, dest):
+        img = self.decrypt(src)
+        iio.imwrite(dest, img)
+
     def encrypt_vid(self, src, dest):
         """
         Runs encryption on videos. Assumes a square matrix divisible by 4.
@@ -282,7 +290,7 @@ class Watermark:
         if n > 0:
             vid[:, tmp_x, tmp_y] = vid[:, x, y]
 
-    def score_vid(self, ref_path, hyp_path):
+    def score(self, ref_path, hyp_path):
         from sklearn.metrics import f1_score
         ref = skv.vread(ref_path)
         hyp = skv.vread(hyp_path)
@@ -298,10 +306,10 @@ if __name__ == '__main__':
     parser.add_argument(
         '-o', '--output', help="Path to watermarked image", default=None)
     parser.add_argument(
-        '-d',
-        '--decrypt',
+        '-v',
+        '--video',
         action='store_true',
-        help="Whether to decrypt or encrypt image. Defaults to encryption")
+        help="Whether to assume video. Defaults to false (image)")
     parser.add_argument(
         '-b', '--blocksize', help="Number of dimensions of block", default=4)
     parser.add_argument(
@@ -324,11 +332,19 @@ if __name__ == '__main__':
         args.show = True
     wm = Watermark(
         int(args.blocksize), float(args.threshold), args.show, int(args.key))
-    if args.mode == 'encrypt':
-        wm.encrypt_vid(args.input, args.output)
-    elif args.mode == 'decrypt':
-        wm.decrypt_vid(args.input, args.output)
-    elif args.mode == 'tamper':
-        wm.tamper_vid(args.input, args.output, save=True)
-    elif args.mode == 'score':
-        wm.score_vid(args.input, args.output)
+    if args.video:
+        if args.mode == 'encrypt':
+            wm.encrypt_vid(args.input, args.output)
+        elif args.mode == 'decrypt':
+            wm.decrypt_vid(args.input, args.output)
+        elif args.mode == 'tamper':
+            wm.tamper_vid(args.input, args.output, save=True)
+        elif args.mode == 'score':
+            wm.score(args.input, args.output)
+    else:
+        if args.mode == 'encrypt':
+            wm.encrypt_img(args.input, args.output)
+        elif args.mode == 'decrypt':
+            wm.decrypt_img(args.input, args.output)
+        elif args.mode == 'score':
+            wm.score(args.input, args.output)
