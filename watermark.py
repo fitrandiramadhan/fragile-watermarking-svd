@@ -123,8 +123,7 @@ class Watermark:
         if self.show:
             plt.imshow(np.all(binary, axis=-1))
             plt.show()
-        else:
-            return img
+        return img
 
     def decrypt(self, src, n_trans=0):
         """
@@ -156,8 +155,7 @@ class Watermark:
         if self.show:
             plt.imshow(np.any(xor, axis=-1))
             plt.show()
-        else:
-            return xor
+        return xor
 
     def gif_encrypt(self, src, dest=None):
         ext = os.path.splitext(src)[-1]
